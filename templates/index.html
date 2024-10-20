@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probability Distributions Visualizer</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Probability Distribution Visualizer</h1>
+    
+    <form id="distForm">
+        <label for="distribution">Choose a distribution:</label>
+        <select id="distribution" name="distribution">
+            <option value="normal">Normal</option>
+            <option value="uniform">Uniform</option>
+            <option value="exponential">Exponential</option>
+            <option value="poisson">Poisson</option>
+            <option value="binomial">Binomial</option>
+        </select>
+        
+        <!-- Normal Distribution Parameters -->
+        <div id="normalParams" class="param-group">
+            <label for="mu">Mean (μ):</label>
+            <input type="number" id="mu" name="mu" step="any" value="0">
+            <label for="sigma">Standard Deviation (σ):</label>
+            <input type="number" id="sigma" name="sigma" step="any" value="1">
+        </div>
+        
+        <!-- Uniform Distribution Parameters -->
+        <div id="uniformParams" class="param-group" style="display:none;">
+            <label for="a">Lower bound (a):</label>
+            <input type="number" id="a" name="a" step="any" value="-1">
+            <label for="b">Upper bound (b):</label>
+            <input type="number" id="b" name="b" step="any" value="1">
+        </div>
+
+        <!-- Exponential Distribution Parameters -->
+        <div id="exponentialParams" class="param-group" style="display:none;">
+            <label for="scale">Scale:</label>
+            <input type="number" id="scale" name="scale" step="any" value="1">
+        </div>
+
+        <!-- Poisson Distribution Parameters -->
+        <div id="poissonParams" class="param-group" style="display:none;">
+            <label for="lambda">Lambda (λ):</label>
+            <input type="number" id="lambda" name="lambda" step="any" value="3">
+        </div>
+
+        <!-- Binomial Distribution Parameters -->
+        <div id="binomialParams" class="param-group" style="display:none;">
+            <label for="n">Number of trials (n):</label>
+            <input type="number" id="n" name="n" step="1" value="10">
+            <label for="p">Probability of success (p):</label>
+            <input type="number" id="p" name="p" step="any" value="0.5">
+        </div>
+
+        <button type="submit">Plot</button>
+    </form>
+
+    <h2>Plot</h2>
+    <div id="plot"></div>
+
+    <script>
+        $(document).ready(function() {
+            // Show and hide parameter forms based on selected distribution
+            $('#distribution').on('change', function() {
+                var selectedDist = $(this).val();
+                $('.param-group').hide();
+                
+                if (selectedDist === 'normal') {
+                    $('#normalParams').show();
+                } else if (selectedDist === 'uniform') {
+                    $('#uniformParams').show();
+                } else if (selectedDist === 'exponential') {
+                    $('#exponentialParams').show();
+                } else if (selectedDist === 'poisson') {
+                    $('#poissonParams').show();
+                } else if (selectedDist === 'binomial') {
+                    $('#binomialParams').show();
+                }
+            });
+
+            // Submit form to plot distribution
+            $('#distForm').on('submit', function(e) {
+                e.preventDefault();
+
+                var distribution = $('#distribution').val();
+                var params = {};
+
+                if (distribution === 'normal') {
+                    params.mu = parseFloat($('#mu').val());
+                    params.sigma = parseFloat($('#sigma').val());
+                } else if (distribution === 'uniform') {
+                    params.a = parseFloat($('#a').val());
+                    params.b = parseFloat($('#b').val());
+                } else if (distribution === 'exponential') {
+                    params.scale = parseFloat($('#scale').val());
+                } else if (distribution === 'poisson') {
+                    params.lambda = parseFloat($('#lambda').val());
+                } else if (distribution === 'binomial') {
+                    params.n = parseInt($('#n').val());
+                    params.p = parseFloat($('#p').val());
+                }
+
+                // Send the request to the server
+                $.ajax({
+                    url: '/plot',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ distribution: distribution, params: params }),
+                    success: function(response) {
+                        var plotData = JSON.parse(response);
+                        Plotly.newPlot('plot', plotData.data, plotData.layout);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
